@@ -1,15 +1,14 @@
 # dataMood
+
 Projet data visualitation python, javascript
 
+### requirements
 
-### requirements 
-
-python -m venv .venv 
+python -m venv .venv
 
 source .venv/bin/activate (Aktifleştir)
 
 pip install -r requirements.txt
-
 
 blinker==1.9.0
 click==8.3.0
