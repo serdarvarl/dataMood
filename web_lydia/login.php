@@ -1,3 +1,59 @@
+<?php
+session_start();
+
+$bdd = new PDO('mysql:host=localhost;dbname=datamoodbd;charset=utf8mb4;port=3307', 'root', 'root');
+$bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+if (isset($_SESSION['user_id'])) {
+    header('Location: dashboard-pro.php');
+    exit;
+}
+
+$error_message = '';
+$success_message = '';
+
+// Traiter la soumission du formulaire
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $motdepasse = $_POST['motdepasse'] ?? '';
+
+    // Validations
+    if (empty($email) || empty($motdepasse)) {
+        $error_message = 'L\'email et le mot de passe sont requis';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error_message = 'Email invalide';
+    } else {
+        try {
+            // Chercher l'utilisateur
+            $stmt = $bdd->prepare('SELECT id, nom, prenom, email, motdepasse FROM users WHERE email = ?');
+            $stmt->execute([$email]);
+
+            if ($stmt->rowCount() === 0) {
+                $error_message = 'Email ou mot de passe incorrect';
+            } else {
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                // Vérifier le mot de passe
+                if (!password_verify($motdepasse, $user['motdepasse'])) {
+                    $error_message = 'Email ou mot de passe incorrect';
+                } else {
+                    // Créer la session
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_nom'] = $user['nom'];
+                    $_SESSION['user_prenom'] = $user['prenom'];
+                    $_SESSION['user_email'] = $user['email'];
+
+                    header('Location: dashboard-pro.php');
+                    exit;
+                }
+            }
+        } catch (PDOException $e) {
+            $error_message = 'Erreur lors de la connexion. Veuillez rééssayer.';
+            error_log($e->getMessage());
+        }
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -50,12 +106,19 @@
             width: 50px;
             height: 50px;
             border-radius: 8px;
-            background: #6B3FB8;
+            background: #ffffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 28px;
             color: white;
+            overflow: hidden;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .logo-text {
@@ -115,16 +178,13 @@
             background: #dcfce7;
             color: #166534;
             border: 1px solid #86efac;
+            display: block;
         }
 
         .alert-error {
             background: #fee2e2;
             color: #991b1b;
             border: 1px solid #fca5a5;
-        }
-
-        .alert-success.show,
-        .alert-error.show {
             display: block;
         }
 
@@ -183,128 +243,48 @@
         .back-link:hover {
             opacity: 0.8;
         }
-
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .spinner {
-            border: 3px solid rgba(107, 63, 184, 0.1);
-            border-top: 3px solid #6B3FB8;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <a href="index.html" class="back-link">← Retour à l'accueil</a>
+        <a href="index.php" class="back-link">← Retour à l'accueil</a>
 
         <div class="form-box">
             <div class="form-header">
                 <div class="logo">
-                    <div class="logo-icon">📊</div>
+                    <div class="logo-icon">
+                        <img src="images/logoDataMood.png" alt="Data Moode Logo">
+                    </div>
                     <div class="logo-text">Data Moode</div>
                 </div>
                 <h1>Se connecter</h1>
-                <p>Accédez à votre compte</p>
             </div>
 
-            <div id="message" class="message-alert"></div>
+            <?php if (!empty($error_message)): ?>
+                <div class="message-alert alert-error">
+                    <?php echo htmlspecialchars($error_message); ?>
+                </div>
+            <?php endif; ?>
 
-            <form id="loginForm">
+            <form method="POST">
                 <div class="form-group">
                     <label for="email">Adresse email</label>
-                    <input type="email" id="email" name="email" required placeholder="vous@exemple.com">
+                    <input type="email" id="email" name="email" required placeholder="votre@email.com" 
+                           value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
                 </div>
 
                 <div class="form-group">
-                    <label for="password">Mot de passe</label>
-                    <input type="password" id="password" name="password" required placeholder="Votre mot de passe">
+                    <label for="motdepasse">Mot de passe</label>
+                    <input type="password" id="motdepasse" name="motdepasse" required placeholder="Votre mot de passe">
                 </div>
 
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <p style="margin-top: 10px; color: #6B3FB8;">Connexion en cours...</p>
-                </div>
-
-                <button type="submit" id="submitBtn">Se connecter</button>
+                <button type="submit">Se connecter</button>
             </form>
 
             <div class="form-footer">
-                <p>Vous n'avez pas de compte ? <a href="signup.html">S'inscrire</a></p>
+                <p>Vous n'avez pas de compte ? <a href="signup.php">S'inscrire</a></p>
             </div>
         </div>
     </div>
-
-    <script>
-        const form = document.getElementById('loginForm');
-        const messageDiv = document.getElementById('message');
-        const loading = document.getElementById('loading');
-        const submitBtn = document.getElementById('submitBtn');
-
-        form.addEventListener('submit', function(e) {
-            e.preventDefault();
-
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-
-            // Validation côté client
-            if (!email || !password) {
-                showMessage('L\'email et le mot de passe sont requis', 'error');
-                return;
-            }
-
-            // Montrer le spinner
-            loading.style.display = 'block';
-            submitBtn.disabled = true;
-
-            // Créer les données du formulaire
-            const formData = new FormData();
-            formData.append('email', email);
-            formData.append('password', password);
-
-            // AJAX REQUEST vers le PHP
-            fetch('api/login.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                loading.style.display = 'none';
-                submitBtn.disabled = false;
-
-                if (data.success) {
-                    showMessage(data.message, 'success');
-                    setTimeout(() => {
-                        window.location.href = 'dashboard.html';
-                    }, 1500);
-                } else {
-                    showMessage(data.message, 'error');
-                }
-            })
-            .catch(error => {
-                loading.style.display = 'none';
-                submitBtn.disabled = false;
-                showMessage('Erreur: ' + error.message, 'error');
-            });
-        });
-
-        function showMessage(text, type) {
-            messageDiv.textContent = text;
-            messageDiv.classList.remove('alert-success', 'alert-error', 'show');
-            messageDiv.classList.add('alert-' + type, 'show');
-        }
-    </script>
 </body>
 </html>

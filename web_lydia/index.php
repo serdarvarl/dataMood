@@ -1,15 +1,29 @@
+<?php
+session_start();
+
+try {
+    $bdd = new PDO('mysql:host=localhost;dbname=datamoodbd;charset=utf8mb4;port=3307', 'root', 'root');
+    $bdd->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    die('Erreur connexion: ' . $e->getMessage());
+}
+
+// Vérifier si l'utilisateur est connecté
+$is_logged_in = isset($_SESSION['user_id']) && !empty($_SESSION['user_id']);
+
+header('Content-Type: text/html; charset=utf-8');
+?>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <!-- Permet d'adapter le site à la taille de l'écran (mobile, tablette, ordinateur) -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
     <title>Data Moode - Dashboard d'analyse comportementale</title>
     <style>
         * {
             margin: 0;
             padding: 0;
-            box-sizing: border-box; /* Inclut le padding et la bordure dans la largeur et la hauteur */
+            box-sizing: border-box;
         }
 
         body {
@@ -26,13 +40,13 @@
 
         /* HEADER */
         header {
-            border-bottom: 2px solid #e5e7eb;  /* Ligne grise en bas */
-            padding: 20px 0; /* Espace intérieur */
-            position: sticky; /* Reste en haut quand tu scrolls ( entre un relative et fixed) */
+            border-bottom: 2px solid #e5e7eb;
+            padding: 20px 0;
+            position: sticky;
             top: 0;
             background: white;
-            z-index: 50; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);  /* Au-dessus des autres éléments */
+            z-index: 50;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         header .container {
@@ -53,13 +67,20 @@
             width: 40px;
             height: 40px;
             border-radius: 8px;
-            background: #6B3FB8;
+            background: #ffffffff;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 20px;
             font-weight: bold;
+            overflow: hidden;
+        }
+
+        .logo-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .logo-text {
@@ -69,18 +90,18 @@
         }
 
         .header-buttons {
-            display: flex; 
-            gap: 15px; /* Espace de 15px entre les éléments du conteneur */
+            display: flex;
+            gap: 15px;
         }
 
         .btn {
-            padding: 10px 20px;  /* Espace intérieur */ 
-            border-radius: 6px; /* Coins arrondis */
-            cursor: pointer; /* La souris devient cliquable */
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
             font-size: 14px;
             font-weight: 600;
             border: none;
-            transition: all 0.3s ease; /* Animation lisse quand tu passes dessus */
+            transition: all 0.3s ease;
             text-decoration: none;
             display: inline-block;
         }
@@ -374,7 +395,8 @@
             color: white;
         }
 
-        .pricing-card button {
+        .pricing-card button,
+        .pricing-card a {
             width: 100%;
         }
 
@@ -451,13 +473,20 @@
     <!-- HEADER -->
     <header>
         <div class="container">
-            <a href="index.html" class="logo">
-                <div class="logo-icon">📊</div>
+            <a href="index.php" class="logo">
+                <div class="logo-icon">
+                    <img src="images/logoDataMood.png" alt="Data Moode Logo">
+                </div>
                 <span class="logo-text">Data Moode</span>
             </a>
             <div class="header-buttons">
-                <a href="login.html" class="btn btn-outline">Se connecter</a>
-                <a href="signup.html" class="btn btn-primary">Commencer gratuitement</a>
+                <?php if ($is_logged_in): ?>
+                    <a href="interface_comparasion.php>Mon Compte</a>
+                    <a href="logout.php" class="btn btn-primary">Déconnexion</a>
+                <?php else: ?>
+                    <a href="login.php" class="btn btn-outline">Se connecter</a>
+                    <a href="dashboard-free.php" class="btn btn-primary">Commencer gratuitement</a>
+                <?php endif; ?>
             </div>
         </div>
     </header>
@@ -470,10 +499,13 @@
             <p>Data Moode est le dashboard d'analyse comportementale qui vous permet de comprendre vos utilisateurs en profondeur et prendre les bonnes décisions, rapidement.</p>
 
             <div class="hero-buttons">
-                <a href="signup.html" class="btn btn-primary btn-lg">Démarrer gratuitement →</a>
-                <a href="login.html" class="btn btn-outline btn-lg">Voir une démo</a>
+                <?php if ($is_logged_in): ?>
+                    <a href="dashboard-pro.php" class="btn btn-primary btn-lg">Accéder au Dashboard pro →</a>
+                <?php else: ?>
+                    <a href="login.php" class="btn btn-primary btn-lg">Accéder au Dashboard pro →</a>
+                    <a href="dashboard-free.php" class="btn btn-outline btn-lg">Commencer gratuitement</a>
+                <?php endif; ?>
             </div>
-            <p class="hero-subtext">Aucune carte bancaire requise • Accès immédiat</p>
 
             <!-- DASHBOARD PREVIEW -->
             <div class="dashboard-preview">
@@ -559,7 +591,7 @@
                         <li>✓ Graphiques interactifs</li>
                         <li>✓ Support communautaire</li>
                     </ul>
-                    <a href="signup.html" class="btn btn-outline" style="width: 100%;">Commencer gratuitement</a>
+                    <a href="dashboard-free.php" class="btn btn-outline">Commencer gratuitement</a>
                 </div>
 
                 <div class="pricing-card pro">
@@ -574,7 +606,7 @@
                         <li>✓ Accès API complet</li>
                         <li>✓ Support prioritaire</li>
                     </ul>
-                    <a href="signup.html" class="btn btn-primary" style="width: 100%;">Essayer PRO gratuitement</a>
+                    <a href="signup.php" class="btn btn-primary">Essayer PRO</a>
                 </div>
             </div>
         </div>
@@ -586,8 +618,11 @@
             <h2>Prêt à transformer vos données en insights ?</h2>
             <p>Rejoignez les équipes qui utilisent Data Moode pour mieux comprendre leurs utilisateurs</p>
             <div class="cta-buttons">
-                <a href="signup.html" class="btn btn-primary btn-lg">Commencer maintenant →</a>
-                <a href="login.html" class="btn btn-outline btn-lg">Se connecter</a>
+                <?php if ($is_logged_in): ?>
+                    <a href="dashboard-pro.php" class="btn btn-primary btn-lg">Accéder à mon compte →</a>
+                <?php else: ?>
+                    <a href="login.php" class="btn btn-primary btn-lg">Accéder au Dashboard pro →</a>
+                <?php endif; ?>
             </div>
         </div>
     </section>
