@@ -1,34 +1,71 @@
-# dataMood
+# Analyse du Comportement Client sur une Plateforme E-commerce
 
-Projet data visualitation python, javascript
+Ce projet a pour objectif d'analyser le comportement des clients et les tendances de ventes sur une plateforme e-commerce française de C2C (consumer-to-consumer) spécialisée dans la mode. L'analyse est réalisée via une application web interactive qui s'appuie sur une API Flask pour les calculs statistiques.
 
-### requirements
+**Source des données :** [E-Commerce Users of a French C2C Fashion Store (Kaggle)](https://www.kaggle.com/datasets/jmmvutu/ecommerce-users-of-a-french-c2c-fashion-store)
 
+## Technologies Utilisées
+
+- **Backend :** Python, Flask, Pandas, SciPy
+- **Frontend :** HTML, CSS, JavaScript
+- **Base de données :** MySQL / MariaDB (via phpMyAdmin)
+
+---
+
+## Guide d'Installation et de Lancement
+
+Suivez ces étapes pour configurer et lancer le projet sur votre machine locale.
+
+### 1. Prérequis
+
+- **Python 3 :** Assurez-vous que Python 3 est installé sur votre système.
+- **Serveur de base de données :** Un serveur comme WAMP, MAMP, XAMPP ou autre, avec **phpMyAdmin** fonctionnel.
+
+### 2. Configuration de la Base de Données
+
+1.  Démarrez votre serveur Apache et MySQL.
+2.  Ouvrez **phpMyAdmin**.
+3.  Créez une nouvelle base de données (par exemple, `datamoodbd`).
+4.  Sélectionnez la base de données que vous venez de créer, puis allez dans l'onglet **Importer**.
+5.  Importez le fichier `datamoodbd.sql` fourni dans le projet.
+
+### 3. Configuration de l'Environnement Python
+
+Ouvrez un terminal dans le répertoire racine du projet (`gestion_projet_L3_miashs`).
+
+**a. Créez un environnement virtuel :**
+```bash
 python -m venv .venv
+```
 
-source .venv/bin/activate (Aktifleştir)
+**b. Activez l'environnement virtuel :**
 
+-   **Sur Windows (Invite de commandes / PowerShell) :**
+    ```cmd
+    .venv\Scripts\activate
+    ```
+-   **Sur macOS / Linux :**
+    ```bash
+    source .venv/bin/activate
+    ```
+*(Une fois activé, le nom de l'environnement `(.venv)` devrait apparaître au début de la ligne de votre terminal.)*
+
+**c. Installez les dépendances :**
+Naviguez dans le dossier `dataMood` et installez les paquets requis.
+```bash
+cd dataMood
 pip install -r requirements.txt
+cd ..
+```
 
-blinker==1.9.0
-click==8.3.0
-contourpy==1.3.3
-cycler==0.12.1
-Flask==3.1.2
-fonttools==4.60.1
-itsdangerous==2.2.0
-Jinja2==3.1.6
-kiwisolver==1.4.9
-MarkupSafe==3.0.3
-matplotlib==3.10.7
-numpy==2.3.4
-packaging==25.0
-pandas==2.3.3
-pillow==12.0.0
-pyparsing==3.2.5
-python-dateutil==2.9.0.post0
-pytz==2025.2
-scipy==1.16.3
-six==1.17.0
-tzdata==2025.2
-Werkzeug==3.1.3
+### 4. Lancement de l'Application
+
+**a. Démarrez le serveur API :**
+Assurez-vous que l'environnement virtuel est toujours activé.
+```bash
+python dataMood/exploitation_data/api_server.py
+```
+Le terminal devrait indiquer que le serveur est en cours d'exécution (`Running on http://127.0.0.1:5000`).
+
+**b. Ouvrez le site web :**
+Naviguez vers le dossier `dataMood/exploitation_data/web` et ouvrez le fichier `index.html` dans votre navigateur web. L'application est maintenant prête à être utilisée.
